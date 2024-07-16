@@ -1,0 +1,37 @@
+name: Build and Package for macOS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '8.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet publish -c Release -r osx-x64
+
+    - name: Create .pkg package
+      run: |
+        mkdir -p MyAppPkg/usr/local/myapp
+        cp -r bin/Release/net7.0/osx-x64/publish/* MyAppPkg/usr/local/myapp/
+        pkgbuild --root NfseToXmlConverter --identifier com.moisesferreira.nfsetoxslxconverter --version 1.0 --install-location /usr/local/myapp NfseToXmlConverter.pkg
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: NfseToXmlConverter-pkg
+        path: NfseToXmlConverter.pkg
